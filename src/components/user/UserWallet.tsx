@@ -91,6 +91,21 @@ export const UserWallet: React.FC = () => {
           </select>
         </div>
 
+        {selectedMethod === 'UPI (Google Pay / PhonePe)' && (
+          <div className="bg-slate-900 p-4 rounded-xl border border-slate-850 flex flex-col items-center justify-center gap-3 text-center animate-in fade-in duration-250">
+            <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Scan with Google Pay / UPI App</span>
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=kk6308608-1@oksbi%26pn=Krishna%20Kumar%26cu=INR%26am=${rechargeAmount}`} 
+              alt="UPI QR Code" 
+              className="w-44 h-44 bg-white p-2 rounded-2xl shadow-md border border-slate-700"
+            />
+            <div>
+              <p className="text-[11px] font-bold text-slate-100">UPI ID: kk6308608-1@oksbi</p>
+              <p className="text-[10px] text-slate-400 font-mono">Payee Name: Krishna Kumar</p>
+            </div>
+          </div>
+        )}
+
         <button
           onClick={handleTopUp}
           className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center justify-center gap-2"

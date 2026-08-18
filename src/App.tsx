@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Car, 
   MapPin, 
@@ -82,6 +82,16 @@ function MainApp() {
   
   // Driver Tabs: 'dashboard' | 'active' | 'earnings' | 'docs' | 'incentives'
   const [driverTab, setDriverTab] = useState<string>('dashboard');
+
+  // Auto-switch tabs to active when a booking starts
+  const prevActiveBookingRef = useRef(activeBooking);
+  useEffect(() => {
+    if (activeBooking && !prevActiveBookingRef.current) {
+      setUserTab('active');
+      setDriverTab('active');
+    }
+    prevActiveBookingRef.current = activeBooking;
+  }, [activeBooking]);
 
   // Admin Tabs: 'dashboard' | 'geofences' | 'fleetops' | 'pricing' | 'drivers' | 'vehicles' | 'bookings' | 'complaints' | 'analytics'
   const [adminTab, setAdminTab] = useState<string>('dashboard');

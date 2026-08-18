@@ -197,6 +197,20 @@ export const InvoiceModal: React.FC = () => {
             </table>
           </div>
 
+          {/* QR Code Pay section */}
+          <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left print:hidden animate-in fade-in">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Payment via UPI QR Code</span>
+              <p className="text-[11px] text-slate-350">Scan using Google Pay or any UPI app to pay the fare or tip your driver.</p>
+              <p className="text-[10px] text-slate-500 font-mono">UPI ID: kk6308608-1@oksbi • Payee: Krishna Kumar</p>
+            </div>
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=upi://pay?pa=kk6308608-1@oksbi%26pn=Krishna%20Kumar%26cu=INR%26am=${fb.totalFare + (b.tip || 0)}`} 
+              alt="UPI QR Code" 
+              className="w-28 h-28 bg-white p-1.5 rounded-xl border border-slate-850 shrink-0"
+            />
+          </div>
+
           {/* Footer note */}
           <div className="text-center text-[10px] text-slate-500 pt-2">
             This is a computer-generated tax invoice and requires no physical signature.
