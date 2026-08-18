@@ -95,6 +95,7 @@ interface AppContextType {
   startRideWithOtp: (bookingId: string, otp: string) => { success: boolean; message: string };
   completeRide: (bookingId: string) => void;
   rateAndReviewRide: (bookingId: string, rating: number, review: string, tip?: number) => void;
+  settleBookingPayment: (bookingId: string, method: PaymentMethod) => void;
   driverArriveAtPickup: (bookingId: string) => void;
   driverAcceptRide: (bookingId: string, driverId: string) => void;
 
@@ -539,7 +540,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     addNotification('Searching Nearby Drivers', `Matching nearest verified ${category.toUpperCase()} cab...`, 'ride');
 
-    // Auto-match an available online driver after 60 seconds (allows manual/interactive acceptance)
+    // Auto-match an available online driver after 5 seconds (allows manual/interactive acceptance)
     setTimeout(() => {
       const eligibleDriver = drivers.find(d => d.isOnline && (d.vehicle.category === category || category === 'mini')) || drivers[0];
       
@@ -570,7 +571,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         `${eligibleDriver.name} in ${eligibleDriver.vehicle.model} (${eligibleDriver.vehicle.licensePlate}) is on the way.`,
         'ride'
       );
-    }, 60000);
+    }, 5000);
 
     return newBooking;
   };
@@ -617,21 +618,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const totalFare = activeBooking.fareBreakdown.totalFare;
     const driverCut = activeBooking.fareBreakdown.driverTakeHome;
 
-    // Deduct from wallet if wallet payment
-    if (activeBooking.paymentMethod === 'wallet') {
-      setWalletBalance(b => Math.max(0, b - totalFare));
-      const tx: WalletTransaction = {
-        id: `tx_${Date.now()}`,
-        amount: totalFare,
-        type: 'debit',
-        description: `Ride Fare: ${activeBooking.bookingCode}`,
-        timestamp: new Date().toISOString(),
-        paymentMethod: 'KK Digital Wallet',
-        status: 'completed',
-      };
-      setWalletTransactions(prev => [tx, ...prev]);
-    }
-
     // Credit to driver
     if (activeBooking.driverId) {
       setDrivers(prev => prev.map(d => {
@@ -651,13 +637,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const completedBooking: Booking = {
       ...activeBooking,
       status: 'completed',
-      paymentStatus: 'paid',
+      paymentStatus: 'pending',
       completedAt: new Date().toISOString(),
     };
 
     setActiveBooking(completedBooking);
     setBookings(prev => prev.map(b => b.id === bookingId ? completedBooking : b));
-    addNotification('Trip Completed!', `Total fare ₹${totalFare} settled. Thank you for riding.`, 'ride');
+    addNotification('Trip Completed!', `Trip finished. Total fare ₹${totalFare} is pending settlement.`, 'ride');
   };
 
   const rateAndReviewRide = (bookingId: string, rating: number, review: string, tip = 0) => {
@@ -683,8 +669,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ...prev,
       ]);
     }
+  };
 
-    addNotification('Feedback Recorded', `Thank you for rating your trip ${rating} ★`, 'system');
+  const settleBookingPayment = (bookingId: string, method: PaymentMethod) => {
+    if (!activeBooking || activeBooking.id !== bookingId) return;
+    const totalFare = activeBooking.fareBreakdown.totalFare;
+
+    if (method === 'wallet') {
+      setWalletBalance(b => Math.max(0, b - totalFare));
+      setWalletTransactions(prev => [
+        {
+          id: `tx_pay_${Date.now()}`,
+          amount: totalFare,
+          type: 'debit',
+          description: `Ride Fare: ${activeBooking.bookingCode}`,
+          timestamp: new Date().toISOString(),
+          paymentMethod: 'KK Digital Wallet',
+          status: 'completed',
+        },
+        ...prev,
+      ]);
+    }
+
+    setActiveBooking(curr => {
+      if (!curr) return null;
+      return {
+        ...curr,
+        paymentMethod: method,
+        paymentStatus: 'paid',
+      };
+    });
+
+    setBookings(prev => prev.map(b => {
+      if (b.id === bookingId) {
+        return {
+          ...b,
+          paymentMethod: method,
+          paymentStatus: 'paid',
+        };
+      }
+      return b;
+    }));
+
+    addNotification('Payment Settled', `Fare of ₹${totalFare} successfully paid via ${method.toUpperCase()}.`, 'ride');
   };
 
   // Continuous Car Animation Loop during in_progress
@@ -914,6 +941,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setShowInvoiceModal,
         invoiceBooking,
         setInvoiceBooking,
+        settleBookingPayment,
       }}
     >
       {children}

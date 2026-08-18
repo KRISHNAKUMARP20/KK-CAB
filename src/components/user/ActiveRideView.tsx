@@ -114,30 +114,6 @@ export const ActiveRideView: React.FC = () => {
         </div>
       </div>
 
-      {/* Driver Simulation Acceptance Panel */}
-      {b.status === 'searching' && (
-        <div className="bg-slate-950 p-5 rounded-2xl border-2 border-amber-500/30 space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
-            <p className="text-xs font-bold text-slate-200">
-              Ride request sent to driver! Waiting for driver to accept...
-            </p>
-          </div>
-          <p className="text-[11px] text-slate-400 leading-relaxed">
-            You can switch to the Driver Portal to accept this request on the dashboard, or click the button below to simulate driver acceptance.
-          </p>
-          <button
-            onClick={() => {
-              const eligibleDriver = drivers.find(d => d.isOnline) || drivers[0];
-              driverAcceptRide(b.id, eligibleDriver.id);
-            }}
-            className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition cursor-pointer"
-          >
-            Accept Ride as Driver (Simulation)
-          </button>
-        </div>
-      )}
-
       {/* 2. Driver & Vehicle Info Card */}
       {d && (
         <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

@@ -11,24 +11,48 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
+import React, { useState } from 'react';
+import { 
+  Star, 
+  CheckCircle2, 
+  FileText, 
+  Heart, 
+  Smile, 
+  Sparkles, 
+  Share2, 
+  X,
+  CreditCard,
+  Wallet,
+  QrCode
+} from 'lucide-react';
+import { useApp } from '../../context/AppContext';
+
 export const RideSummaryModal: React.FC = () => {
   const { 
     activeBooking, 
     rateAndReviewRide, 
     setActiveBooking, 
     setInvoiceBooking, 
-    setShowInvoiceModal 
+    setShowInvoiceModal,
+    settleBookingPayment,
+    walletBalance
   } = useApp();
 
   const [rating, setRating] = useState<number>(5);
   const [selectedTip, setSelectedTip] = useState<number>(30);
   const [reviewText, setReviewText] = useState<string>('');
   const [submitted, setSubmitted] = useState<boolean>(false);
+  const [payMethod, setPayMethod] = useState<'wallet' | 'upi'>('upi');
 
   if (!activeBooking || activeBooking.status !== 'completed') return null;
 
   const b = activeBooking;
   const fb = b.fareBreakdown;
+  const totalAmount = fb.totalFare;
+
+  const handlePayRide = () => {
+    settleBookingPayment(b.id, payMethod);
+  };
 
   const handleSubmitFeedback = () => {
     rateAndReviewRide(b.id, rating, reviewText, selectedTip);
@@ -44,9 +68,11 @@ export const RideSummaryModal: React.FC = () => {
     setActiveBooking(null);
   };
 
+  const isPaid = b.paymentStatus === 'paid';
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl text-slate-100 animate-in zoom-in-95 space-y-6">
+      <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl text-slate-100 animate-in zoom-in-95 space-y-6 max-h-[90vh] overflow-y-auto">
         
         {/* Celebration Header */}
         <div className="text-center space-y-2">
@@ -59,105 +85,179 @@ export const RideSummaryModal: React.FC = () => {
           </p>
         </div>
 
-        {/* Fare Summary Box */}
-        <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
-          <div>
-            <span className="text-[10px] uppercase font-bold text-slate-400">Total Fare Paid</span>
-            <div className="font-heading font-black text-2xl text-amber-400">
-              ₹{fb.totalFare + selectedTip}
-            </div>
-            <span className="text-[10px] text-slate-400 font-mono capitalize">
-              Via {b.paymentMethod.replace('_', ' ')}
-            </span>
-          </div>
-
-          <button
-            onClick={handleOpenInvoice}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs rounded-xl border border-slate-700 transition"
-          >
-            <FileText className="w-4 h-4 text-amber-400" />
-            <span>Tax Invoice</span>
-          </button>
-        </div>
-
-        {!submitted ? (
-          <div className="space-y-4">
-            
-            {/* 5-Star Rating */}
-            <div className="text-center space-y-2">
-              <label className="text-xs font-bold text-slate-300">
-                Rate Captain {b.driver?.name}
-              </label>
-              <div className="flex items-center justify-center gap-2">
-                {[1, 2, 3, 4, 5].map(star => (
-                  <button
-                    key={star}
-                    onClick={() => setRating(star)}
-                    className="p-1.5 transition transform hover:scale-125"
-                  >
-                    <Star
-                      className={`w-8 h-8 ${
-                        star <= rating
-                          ? 'text-amber-400 fill-amber-400'
-                          : 'text-slate-700 hover:text-amber-300'
-                      }`}
-                    />
-                  </button>
-                ))}
+        {/* 1. PAYMENT FLOW (If pending) */}
+        {!isPaid ? (
+          <div className="space-y-5 animate-in fade-in duration-200">
+            <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-center">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Total Outstanding Fare</span>
+              <div className="font-heading font-black text-3xl text-amber-400">
+                ₹{totalAmount}
               </div>
+              <p className="text-[11px] text-slate-400 mt-1">Please pay the driver to settle the trip dues.</p>
             </div>
 
-            {/* Tip Selection */}
-            <div className="space-y-2">
-              <span className="text-[11px] font-bold text-slate-400 uppercase">
-                Add Captain Gratuity / Tip:
-              </span>
-              <div className="grid grid-cols-4 gap-2">
-                {[0, 20, 30, 50].map(tip => (
-                  <button
-                    key={tip}
-                    onClick={() => setSelectedTip(tip)}
-                    className={`py-2 rounded-xl text-xs font-bold border transition ${
-                      selectedTip === tip
-                        ? 'bg-amber-500 text-slate-950 border-amber-400 shadow'
-                        : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
-                    }`}
-                  >
-                    {tip === 0 ? 'No Tip' : `₹${tip}`}
-                  </button>
-                ))}
+            {/* Selector Method */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setPayMethod('upi')}
+                className={`p-3.5 rounded-2xl border text-xs font-bold transition flex flex-col items-center justify-center gap-1.5 ${
+                  payMethod === 'upi'
+                    ? 'bg-amber-500/10 border-amber-500 text-amber-400'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                <QrCode className="w-5 h-5" />
+                <span>Google Pay / UPI QR</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPayMethod('wallet')}
+                className={`p-3.5 rounded-2xl border text-xs font-bold transition flex flex-col items-center justify-center gap-1.5 ${
+                  payMethod === 'wallet'
+                    ? 'bg-amber-500/10 border-amber-500 text-amber-400'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                <Wallet className="w-5 h-5" />
+                <span>KK Wallet (₹{walletBalance})</span>
+              </button>
+            </div>
+
+            {/* UPI QR Display */}
+            {payMethod === 'upi' && (
+              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-850 flex flex-col items-center justify-center gap-3 text-center">
+                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Scan QR to pay ₹{totalAmount}</span>
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=kk6308608-1@oksbi%26pn=Krishna%20Kumar%26cu=INR%26am=${totalAmount}`} 
+                  alt="UPI QR Code" 
+                  className="w-40 h-40 bg-white p-2 rounded-xl shadow-md border border-slate-800"
+                />
+                <div>
+                  <p className="text-[11px] font-bold text-slate-200">UPI ID: kk6308608-1@oksbi</p>
+                  <p className="text-[10px] text-slate-400">Payee: Krishna Kumar</p>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Review feedback input */}
-            <input
-              type="text"
-              value={reviewText}
-              onChange={e => setReviewText(e.target.value)}
-              placeholder="Leave a comment (e.g. Great music & smooth driving)..."
-              className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl p-3 focus:outline-none focus:border-amber-500"
-            />
+            {/* Wallet display */}
+            {payMethod === 'wallet' && (
+              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-center space-y-1">
+                <p className="text-xs text-slate-200 font-bold">Pay from KK Digital Wallet</p>
+                <p className="text-[11px] text-slate-400">Your current wallet balance is ₹{walletBalance}.</p>
+                {walletBalance < totalAmount && (
+                  <p className="text-[10px] text-rose-400 font-bold mt-1">⚠️ Insufficient balance! Please pay via UPI or recharge wallet.</p>
+                )}
+              </div>
+            )}
 
-            {/* Submit button */}
             <button
-              onClick={handleSubmitFeedback}
-              className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-xl transition"
+              onClick={handlePayRide}
+              disabled={payMethod === 'wallet' && walletBalance < totalAmount}
+              className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Submit Feedback & Rating
+              {payMethod === 'upi' ? 'Confirm Payment Complete' : `Pay ₹${totalAmount} from Wallet`}
             </button>
-
           </div>
         ) : (
-          <div className="text-center space-y-4">
-            <p className="text-xs text-emerald-400 font-bold">
-              Thank you! Your feedback helps keep KK Smart Cab safe and exceptional.
-            </p>
-            <button
-              onClick={handleDone}
-              className="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition"
-            >
-              Back to Home
-            </button>
+          /* 2. FEEDBACK FLOW (After payment) */
+          <div className="space-y-5 animate-in fade-in duration-200">
+            
+            {/* Payment Success Badge */}
+            <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-2xl flex items-center justify-between text-xs text-emerald-400">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                <span className="font-bold">Fare Payment Settled</span>
+              </div>
+              <button
+                onClick={handleOpenInvoice}
+                className="text-amber-400 hover:underline font-bold text-[11px]"
+              >
+                View Invoice
+              </button>
+            </div>
+
+            {!submitted ? (
+              <div className="space-y-4">
+                
+                {/* 5-Star Rating */}
+                <div className="text-center space-y-2">
+                  <label className="text-xs font-bold text-slate-300 block">
+                    Rate Driver {b.driver?.name}
+                  </label>
+                  <div className="flex items-center justify-center gap-2">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <button
+                        key={star}
+                        onClick={() => setRating(star)}
+                        className="p-1.5 transition transform hover:scale-125"
+                      >
+                        <Star
+                          className={`w-8 h-8 ${
+                            star <= rating
+                              ? 'text-amber-400 fill-amber-400'
+                              : 'text-slate-700 hover:text-amber-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tip Selection */}
+                <div className="space-y-2">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase block">
+                    Add Driver Tip:
+                  </span>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[0, 20, 30, 50].map(tip => (
+                      <button
+                        key={tip}
+                        onClick={() => setSelectedTip(tip)}
+                        className={`py-2 rounded-xl text-xs font-bold border transition ${
+                          selectedTip === tip
+                            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow'
+                            : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
+                        }`}
+                      >
+                        {tip === 0 ? 'No Tip' : `₹${tip}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Review feedback input */}
+                <input
+                  type="text"
+                  value={reviewText}
+                  onChange={e => setReviewText(e.target.value)}
+                  placeholder="Leave a comment (e.g. Smooth driving)..."
+                  className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl p-3 focus:outline-none focus:border-amber-500"
+                />
+
+                {/* Submit button */}
+                <button
+                  onClick={handleSubmitFeedback}
+                  className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-xl transition"
+                >
+                  Submit Feedback & Rating
+                </button>
+
+              </div>
+            ) : (
+              <div className="text-center space-y-4 pt-2">
+                <p className="text-xs text-emerald-400 font-bold">
+                  Thank you! Your feedback helps keep our drivers safe and exceptional.
+                </p>
+                <button
+                  onClick={handleDone}
+                  className="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition"
+                >
+                  Back to Home
+                </button>
+              </div>
+            )}
           </div>
         )}
 
