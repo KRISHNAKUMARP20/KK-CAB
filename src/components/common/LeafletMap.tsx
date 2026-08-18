@@ -87,8 +87,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       const isSurge = geo.surgeMultiplier > 1.0;
       const circle = L.circle([geo.centerLat, geo.centerLng], {
         radius: geo.radiusMeters,
-        color: isSurge ? '#f59e0b' : '#38bdf8',
-        fillColor: isSurge ? '#f59e0b' : '#38bdf8',
+        color: isSurge ? '#06b6d4' : '#0891b2',
+        fillColor: isSurge ? '#06b6d4' : '#0891b2',
         fillOpacity: isSurge ? 0.18 : 0.08,
         weight: 1.5,
         dashArray: isSurge ? '4, 4' : undefined,
@@ -216,8 +216,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         className: 'custom-active-cab',
         html: `
           <div class="relative flex items-center justify-center">
-            <div class="absolute w-10 h-10 bg-amber-400 rounded-full opacity-30 animate-ping"></div>
-            <div class="w-8 h-8 bg-gradient-to-tr from-amber-500 to-amber-300 border-2 border-slate-950 rounded-full flex items-center justify-center text-slate-950 shadow-2xl font-black text-sm">
+            <div class="absolute w-10 h-10 bg-cyan-400 rounded-full opacity-30 animate-ping"></div>
+            <div class="w-8 h-8 bg-gradient-to-tr from-cyan-500 to-cyan-300 border-2 border-slate-950 rounded-full flex items-center justify-center text-slate-950 shadow-2xl font-black text-sm">
               🚕
             </div>
           </div>
@@ -236,7 +236,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       
       // Glow polyline
       const glowLine = L.polyline(latLngs, {
-        color: '#f59e0b',
+        color: '#0891b2',
         weight: 6,
         opacity: 0.35,
       });
@@ -244,7 +244,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
       // Sharp main polyline
       const mainLine = L.polyline(latLngs, {
-        color: '#fbbf24',
+        color: '#06b6d4',
         weight: 3.5,
         opacity: 0.95,
       });

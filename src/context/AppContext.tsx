@@ -38,7 +38,7 @@ import {
   INITIAL_LOST_ITEMS, 
   POPULAR_LOCATIONS 
 } from '../data/mockData';
-import { calculateRouteDistance, computeDetailedFare, generateInterpolatedPath } from '../services/fareService';
+import { calculateRouteDistance, computeDetailedFare, generateInterpolatedPath, fetchRealRoadRoute } from '../services/fareService';
 
 interface AppContextType {
   // Roles
@@ -123,6 +123,18 @@ interface AppContextType {
   reportLostItem: (caseData: Omit<LostItemCase, 'id' | 'caseNumber' | 'status' | 'reportedDate'>) => void;
   updateLostItemStatus: (caseId: string, status: LostItemCase['status']) => void;
 
+  // Booking Form & Routing States
+  pickup: LocationPoint;
+  setPickup: React.Dispatch<React.SetStateAction<LocationPoint>>;
+  destination: LocationPoint;
+  setDestination: React.Dispatch<React.SetStateAction<LocationPoint>>;
+  stops: LocationPoint[];
+  setStops: React.Dispatch<React.SetStateAction<LocationPoint[]>>;
+  distanceKm: number;
+  durationMinutes: number;
+  bookingRouteCoordinates: [number, number][];
+  isLoadingRoute: boolean;
+
   // Driver Partner Actions
   toggleDriverOnline: (driverId: string) => void;
   verifyDriverDoc: (driverId: string, docId: string, status: 'approved' | 'rejected', reason?: string) => void;
@@ -150,29 +162,105 @@ interface AppContextType {
   setShowInvoiceModal: (show: boolean) => void;
   invoiceBooking: Booking | null;
   setInvoiceBooking: (b: Booking | null) => void;
+
+  // Activity Monitoring
+  activityLogs: {
+    id: string;
+    timestamp: string;
+    role: 'user' | 'driver' | 'admin';
+    userName: string;
+    action: string;
+    status: 'Success' | 'Pending' | 'Failed';
+    details?: string;
+  }[];
+  addActivityLog: (userName: string, role: 'user' | 'driver' | 'admin', action: string, status: 'Success' | 'Pending' | 'Failed', details?: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem('kk_cab_authenticated') === 'true';
-  });
-  const [currentRole, setCurrentRole] = useState<UserRole>(() => {
-    return (localStorage.getItem('kk_cab_role') as UserRole) || 'user';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [currentRole, setCurrentRole] = useState<UserRole>('user');
   const [currentUser, setCurrentUser] = useState<User>(INITIAL_USER);
   const [drivers, setDrivers] = useState<Driver[]>(INITIAL_DRIVERS);
   const [currentDriver, setCurrentDriver] = useState<Driver>(INITIAL_DRIVERS[0]);
   const [pricingConfig, setPricingConfig] = useState<PricingConfig>(INITIAL_PRICING_CONFIG);
+  const [bookings, setBookings] = useState<Booking[]>([]);
 
+  const [activityLogs, setActivityLogs] = useState<{
+    id: string;
+    timestamp: string;
+    role: 'user' | 'driver' | 'admin';
+    userName: string;
+    action: string;
+    status: 'Success' | 'Pending' | 'Failed';
+    details?: string;
+  }[]>([]);
+
+  const addActivityLog = (userName: string, role: 'user' | 'driver' | 'admin', action: string, status: 'Success' | 'Pending' | 'Failed', details?: string) => {
+    const newLog = {
+      id: `act_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      timestamp: new Date().toLocaleTimeString(),
+      role,
+      userName,
+      action,
+      status,
+      details
+    };
+    setActivityLogs(prev => [newLog, ...prev]);
+  };
   const handleSetRole = (role: UserRole) => {
     setCurrentRole(role);
     localStorage.setItem('kk_cab_role', role);
   };
 
-  const [bookings, setBookings] = useState<Booking[]>(INITIAL_BOOKINGS);
   const [activeBooking, setActiveBooking] = useState<Booking | null>(null);
+
+  // Booking Form & Routing States
+  const [pickup, setPickup] = useState<LocationPoint>(POPULAR_LOCATIONS[0]);
+  const [destination, setDestination] = useState<LocationPoint>(POPULAR_LOCATIONS[1]);
+  const [stops, setStops] = useState<LocationPoint[]>([]);
+  const [distanceKm, setDistanceKm] = useState<number>(0);
+  const [durationMinutes, setDurationMinutes] = useState<number>(0);
+  const [bookingRouteCoordinates, setBookingRouteCoordinates] = useState<[number, number][]>([]);
+  const [isLoadingRoute, setIsLoadingRoute] = useState<boolean>(false);
+
+  // Fetch real road route coordinates and distance/duration using OSRM
+  useEffect(() => {
+    if (!pickup || !destination) return;
+
+    let active = true;
+    setIsLoadingRoute(true);
+
+    fetchRealRoadRoute(pickup, destination, stops).then(result => {
+      if (!active) return;
+      setDistanceKm(result.distanceKm);
+      setDurationMinutes(result.durationMinutes);
+      setBookingRouteCoordinates(result.routeCoordinates);
+      setIsLoadingRoute(false);
+    }).catch((err) => {
+      console.error("OSRM route fetch failed:", err);
+      if (!active) return;
+      // Fallback
+      const fallback = calculateRouteDistance(pickup, destination, stops);
+      setDistanceKm(fallback.distanceKm);
+      setDurationMinutes(fallback.durationMinutes);
+      // Interpolate path for fallback rendering
+      const intermediateCoords: [number, number][] = stops.map(s => [s.lat, s.lng]);
+      const fallbackCoords = generateInterpolatedPath(
+        [pickup.lat, pickup.lng],
+        [destination.lat, destination.lng],
+        intermediateCoords,
+        50
+      );
+      setBookingRouteCoordinates(fallbackCoords);
+      setIsLoadingRoute(false);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [pickup, destination, stops]);
 
   // Live GPS Simulation
   const [simulatedCarPosition, setSimulatedCarPosition] = useState<[number, number]>([13.1986, 77.7066]);
@@ -242,7 +330,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isValid = true;
     } else if (role === 'driver' && cleanEmail === 'driver@kkcab.com' && cleanPassword === 'password') {
       isValid = true;
-    } else if (role === 'admin' && cleanEmail === 'admin@kkcab.com' && cleanPassword === 'password') {
+    } else if (role === 'admin' && (cleanEmail === 'krishna' || cleanEmail === 'krishna@kkcab.com') && cleanPassword === 'krishna@6381') {
       isValid = true;
     }
 
@@ -257,9 +345,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         `Welcome back to KK Smart Cab.`,
         'system'
       );
+      addActivityLog(cleanEmail, role, 'User signed in successfully', 'Success');
       return { success: true };
     }
 
+    addActivityLog(cleanEmail, role, 'Login attempt failed', 'Failed', 'Invalid credentials');
     return { success: false, error: 'Invalid email or password.' };
   };
 
@@ -290,6 +380,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       cleanEmail === 'admin@kkcab.com' ||
       cleanEmail === 'kk6308608@gmail.com'
     ) {
+      addActivityLog(cleanEmail, role, 'Registration failed: Email already registered', 'Failed');
       return { success: false, error: 'Email already registered.' };
     }
 
@@ -326,6 +417,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         `Welcome to KK Smart Cab, ${name}! ${newUser.walletBalance > 0 ? '₹500 Welcome bonus added to wallet.' : ''}`,
         'system'
       );
+      addActivityLog(newUser.email, 'user', `Registered new Rider account named ${name}`, 'Success');
 
       return { success: true };
     } else {
@@ -381,6 +473,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         `Welcome to the fleet, Driver ${name}! Your Nexon EV is online and active.`,
         'system'
       );
+      addActivityLog(newDriver.email, 'driver', `Registered new Captain account named ${name}`, 'Success');
 
       return { success: true };
     }
@@ -480,11 +573,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       corporateExpenseTag = '',
     } = options as any;
 
-    const { distanceKm, durationMinutes } = calculateRouteDistance(pickup, destination, stops);
+    const freshMetrics = calculateRouteDistance(pickup, destination, stops);
+    const finalDistance = freshMetrics.distanceKm;
+    const finalDuration = freshMetrics.durationMinutes;
     const fareBreakdown = computeDetailedFare(
       category, 
-      distanceKm, 
-      durationMinutes, 
+      finalDistance, 
+      finalDuration, 
       pricingConfig, 
       bookingType, 
       rentalPackage, 
@@ -492,13 +587,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       promoDiscount
     );
 
-    const intermediateCoords: [number, number][] = stops.map(s => [s.lat, s.lng]);
-    const routeCoordinates = generateInterpolatedPath(
-      [pickup.lat, pickup.lng],
-      [destination.lat, destination.lng],
-      intermediateCoords,
-      50
-    );
+    let routeCoordinates = bookingRouteCoordinates;
+    if (!routeCoordinates || routeCoordinates.length === 0) {
+      const intermediateCoords: [number, number][] = stops.map(s => [s.lat, s.lng]);
+      routeCoordinates = generateInterpolatedPath(
+        [pickup.lat, pickup.lng],
+        [destination.lat, destination.lng],
+        intermediateCoords,
+        50
+      );
+    }
 
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const code = `KK-DEL-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -523,8 +621,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       fareBreakdown,
       paymentMethod,
       paymentStatus: 'pending',
-      distanceKm,
-      durationMinutes,
+      distanceKm: finalDistance,
+      durationMinutes: finalDuration,
       startOtp: otp,
       routeCoordinates,
       isCorporateExpense,
@@ -539,6 +637,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setEtaMinutesRemaining(durationMinutes);
 
     addNotification('Searching Nearby Drivers', `Matching nearest verified ${category.toUpperCase()} cab...`, 'ride');
+    addActivityLog(currentUser.name, 'user', `Requested a KK ${category.toUpperCase()} cab (Route: ${pickup.name} ➔ ${destination.name})`, 'Success');
 
     // Auto-match an available online driver after 5 seconds (allows manual/interactive acceptance)
     setTimeout(() => {
@@ -571,6 +670,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         `${eligibleDriver.name} in ${eligibleDriver.vehicle.model} (${eligibleDriver.vehicle.licensePlate}) is on the way.`,
         'ride'
       );
+      addActivityLog(eligibleDriver.name, 'driver', `Automatically matched & accepted ride request ${newBooking.bookingCode}`, 'Success');
     }, 5000);
 
     return newBooking;
@@ -580,12 +680,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveBooking(curr => (curr && curr.id === bookingId ? null : curr));
     setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
     addNotification('Booking Cancelled', 'Your cab request has been cancelled with zero penalty.', 'ride');
+    addActivityLog(currentUser.name, 'user', `Cancelled booking request`, 'Success');
   };
 
   const driverArriveAtPickup = (bookingId: string) => {
     setActiveBooking(curr => (curr && curr.id === bookingId ? { ...curr, status: 'driver_arrived' } : curr));
     setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'driver_arrived' } : b));
     addNotification('Driver Arrived at Pickup', 'Your driver is waiting at the pickup spot.', 'ride');
+    addActivityLog('Driver', 'driver', 'Arrived at passenger pickup spot', 'Success');
   };
 
   const driverAcceptRide = (bookingId: string, driverId: string) => {
@@ -596,6 +698,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, driverId, driver, status: 'accepted' } : b));
     addNotification('Ride Request Accepted', `Heading to pickup ${activeBooking?.pickup.name}`, 'ride');
+    addActivityLog(driver.name, 'driver', `Manually accepted ride request`, 'Success');
   };
 
   const startRideWithOtp = (bookingId: string, enteredOtp: string) => {
@@ -603,12 +706,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: 'No active booking found.' };
     }
     if (activeBooking.startOtp !== enteredOtp && enteredOtp !== '0000') {
+      addActivityLog(activeBooking.driver?.name || 'Driver', 'driver', `Ride start failed (incorrect OTP)`, 'Failed');
       return { success: false, message: 'Invalid 4-digit Ride Start OTP. Please check passenger screen.' };
     }
 
+    setSimulationIndex(0);
     setActiveBooking(curr => (curr ? { ...curr, status: 'in_progress' } : null));
     setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'in_progress' } : b));
     addNotification('Trip Started', 'Have a safe journey with KK Smart Cab!', 'ride');
+    addActivityLog(activeBooking.driver?.name || 'Driver', 'driver', `Ride started successfully (OTP Verified)`, 'Success');
     return { success: true, message: 'Trip successfully started!' };
   };
 
@@ -644,6 +750,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveBooking(completedBooking);
     setBookings(prev => prev.map(b => b.id === bookingId ? completedBooking : b));
     addNotification('Trip Completed!', `Trip finished. Total fare ₹${totalFare} is pending settlement.`, 'ride');
+    addActivityLog(activeBooking.driver?.name || 'Driver', 'driver', `Completed trip (Distance: ${activeBooking.distanceKm} km, Fare: ₹${totalFare})`, 'Success');
   };
 
   const rateAndReviewRide = (bookingId: string, rating: number, review: string, tip = 0) => {
@@ -669,6 +776,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ...prev,
       ]);
     }
+    addActivityLog(currentUser.name, 'user', `Submitted a ${rating}-star review for trip`, 'Success');
   };
 
   const settleBookingPayment = (bookingId: string, method: PaymentMethod) => {
@@ -712,35 +820,54 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
 
     addNotification('Payment Settled', `Fare of ₹${totalFare} successfully paid via ${method.toUpperCase()}.`, 'ride');
+    addActivityLog(currentUser.name, 'user', `Paid fare of ₹${totalFare} via ${method.toUpperCase()} QR code`, 'Success');
   };
 
-  // Continuous Car Animation Loop during in_progress
+  // Continuous Car Animation Loop during in_progress (Smooth Fractional Interpolation)
   useEffect(() => {
     if (!activeBooking || activeBooking.status !== 'in_progress' || !activeBooking.routeCoordinates.length) {
       return;
     }
 
     const totalPoints = activeBooking.routeCoordinates.length;
+    if (totalPoints < 2) {
+      completeRide(activeBooking.id);
+      return;
+    }
+
     const interval = setInterval(() => {
       setSimulationIndex(prevIdx => {
-        const nextIdx = prevIdx + 1;
-        if (nextIdx >= totalPoints) {
-          // Reached destination
+        // Step size of 0.04 at 150ms interval (~3.7s per coordinate segment)
+        const nextIdx = prevIdx + 0.04;
+        const intPart = Math.floor(nextIdx);
+
+        if (intPart >= totalPoints - 1) {
+          // Reached destination!
           completeRide(activeBooking.id);
           clearInterval(interval);
-          return prevIdx;
+          return totalPoints - 1;
         }
 
-        const nextCoord = activeBooking.routeCoordinates[nextIdx];
-        setSimulatedCarPosition(nextCoord);
+        const p1 = activeBooking.routeCoordinates[intPart];
+        const p2 = activeBooking.routeCoordinates[intPart + 1];
+        const t = nextIdx - intPart;
 
-        const fractionRemaining = (totalPoints - nextIdx) / totalPoints;
+        // Perform linear interpolation between segments
+        const lat = p1[0] + (p2[0] - p1[0]) * t;
+        const lng = p1[1] + (p2[1] - p1[1]) * t;
+
+        setSimulatedCarPosition([lat, lng]);
+
+        const fractionRemaining = (totalPoints - 1 - nextIdx) / (totalPoints - 1);
         setEtaMinutesRemaining(Math.max(1, Math.round(activeBooking.durationMinutes * fractionRemaining)));
-        setCurrentSpeedKmh(Math.floor(32 + Math.random() * 24));
+        
+        if (Math.random() > 0.85) {
+          setCurrentSpeedKmh(Math.floor(35 + Math.random() * 15));
+        }
 
         return nextIdx;
       });
-    }, 1200);
+    }, 150);
 
     return () => clearInterval(interval);
   }, [activeBooking?.status, activeBooking?.id]);
@@ -924,6 +1051,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         verifyDriverDoc,
         verifyDriverStatus,
         relocateDriversNear,
+        pickup,
+        setPickup,
+        destination,
+        setDestination,
+        stops,
+        setStops,
+        distanceKm,
+        durationMinutes,
+        bookingRouteCoordinates,
+        isLoadingRoute,
         walletBalance,
         walletTransactions,
         addFundsToWallet,
@@ -942,6 +1079,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         invoiceBooking,
         setInvoiceBooking,
         settleBookingPayment,
+        activityLogs,
+        addActivityLog,
       }}
     >
       {children}

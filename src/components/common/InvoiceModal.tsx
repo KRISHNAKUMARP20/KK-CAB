@@ -30,13 +30,13 @@ export const InvoiceModal: React.FC = () => {
         {/* Actions Bar */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6 print:hidden">
           <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-amber-400" />
+            <FileText className="w-5 h-5 text-cyan-400" />
             <span className="font-heading font-black text-lg">Tax Invoice / Trip Receipt</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl shadow transition"
             >
               <Printer className="w-4 h-4" />
               <span>Print / PDF</span>
@@ -64,7 +64,7 @@ export const InvoiceModal: React.FC = () => {
               <p className="text-slate-400 text-[11px]">Connaught Place Central Hub, New Delhi - 110001</p>
             </div>
             <div className="text-left sm:text-right font-mono">
-              <div className="font-bold text-amber-400 text-sm">{b.bookingCode}</div>
+              <div className="font-bold text-cyan-400 text-sm">{b.bookingCode}</div>
               <div className="text-slate-400 text-[11px]">Invoice Date: {new Date(b.createdAt).toLocaleDateString()}</div>
               <div className="text-slate-400 text-[11px]">Time: {new Date(b.createdAt).toLocaleTimeString()}</div>
             </div>
@@ -77,7 +77,7 @@ export const InvoiceModal: React.FC = () => {
               <p className="font-bold text-white mt-1">{b.userName}</p>
               <p className="text-slate-400">{b.userPhone}</p>
               {b.isCorporateExpense && (
-                <div className="mt-1.5 text-[10px] bg-amber-500/10 text-amber-300 p-1.5 rounded border border-amber-500/20">
+                <div className="mt-1.5 text-[10px] bg-cyan-500/10 text-cyan-300 p-1.5 rounded border border-cyan-500/20">
                   🏢 Corporate Tag: {b.corporateExpenseTag || 'Business Expense'}
                 </div>
               )}
@@ -86,7 +86,7 @@ export const InvoiceModal: React.FC = () => {
             <div className="bg-slate-950/40 p-3.5 rounded-xl border border-slate-800/80">
               <span className="text-[10px] font-bold text-slate-400 uppercase">Captain & Vehicle:</span>
               <p className="font-bold text-white mt-1">{b.driver?.name || 'Assigned Fleet Driver'}</p>
-              <p className="text-slate-400">{b.driver?.vehicle.model} • <span className="font-mono text-amber-400">{b.driver?.vehicle.licensePlate}</span></p>
+              <p className="text-slate-400">{b.driver?.vehicle.model} • <span className="font-mono text-cyan-400">{b.driver?.vehicle.licensePlate}</span></p>
               <p className="text-slate-400 text-[10px]">Commercial RTO Permit DL-NCR-2024</p>
             </div>
           </div>
@@ -141,11 +141,13 @@ export const InvoiceModal: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                <tr>
-                  <td className="p-2.5 font-medium text-white">Base Fare</td>
-                  <td className="p-2.5 text-right text-slate-400">Fixed Flag Drop</td>
-                  <td className="p-2.5 text-right font-mono">₹{fb.baseFare}</td>
-                </tr>
+                {fb.baseFare > 0 && (
+                  <tr>
+                    <td className="p-2.5 font-medium text-white">Base Fare</td>
+                    <td className="p-2.5 text-right text-slate-400">Fixed Flag Drop</td>
+                    <td className="p-2.5 text-right font-mono">₹{fb.baseFare}</td>
+                  </tr>
+                )}
                 <tr>
                   <td className="p-2.5 font-medium text-white">Distance Tariff</td>
                   <td className="p-2.5 text-right text-slate-400">{b.distanceKm} km</td>
@@ -160,9 +162,9 @@ export const InvoiceModal: React.FC = () => {
                 )}
                 {fb.surgeAmount > 0 && (
                   <tr>
-                    <td className="p-2.5 font-medium text-amber-300">Peak Demand Surge ({fb.surgeMultiplier}x)</td>
+                    <td className="p-2.5 font-medium text-cyan-300">Peak Demand Surge ({fb.surgeMultiplier}x)</td>
                     <td className="p-2.5 text-right text-slate-400">Dynamic Pricing</td>
-                    <td className="p-2.5 text-right font-mono text-amber-300">+₹{fb.surgeAmount}</td>
+                    <td className="p-2.5 text-right font-mono text-cyan-300">+₹{fb.surgeAmount}</td>
                   </tr>
                 )}
                 {fb.discount > 0 && (
@@ -172,11 +174,13 @@ export const InvoiceModal: React.FC = () => {
                     <td className="p-2.5 text-right font-mono text-emerald-400">-₹{fb.discount}</td>
                   </tr>
                 )}
-                <tr>
-                  <td className="p-2.5 font-medium text-white">GST Tax (5% SAC 9964)</td>
-                  <td className="p-2.5 text-right text-slate-400">CGST 2.5% + SGST 2.5%</td>
-                  <td className="p-2.5 text-right font-mono">₹{fb.gstAmount}</td>
-                </tr>
+                {fb.gstAmount > 0 && (
+                  <tr>
+                    <td className="p-2.5 font-medium text-white">GST Tax (SAC 9964)</td>
+                    <td className="p-2.5 text-right text-slate-400">CGST + SGST</td>
+                    <td className="p-2.5 text-right font-mono">₹{fb.gstAmount}</td>
+                  </tr>
+                )}
                 {b.tip && b.tip > 0 ? (
                   <tr>
                     <td className="p-2.5 font-medium text-amber-300">Captain Gratuity / Tip</td>
@@ -186,10 +190,10 @@ export const InvoiceModal: React.FC = () => {
                 ) : null}
               </tbody>
               <tfoot>
-                <tr className="bg-amber-500/10 font-bold text-white border-t border-amber-500/30">
+                <tr className="bg-cyan-500/10 font-bold text-white border-t border-cyan-500/30">
                   <td className="p-3 text-sm">Grand Total Charged</td>
                   <td className="p-3 text-right text-xs text-slate-400 capitalize">{b.paymentMethod.replace('_', ' ')}</td>
-                  <td className="p-3 text-right text-base font-mono text-amber-400">
+                  <td className="p-3 text-right text-base font-mono text-cyan-400">
                     ₹{fb.totalFare + (b.tip || 0)}
                   </td>
                 </tr>
@@ -200,7 +204,7 @@ export const InvoiceModal: React.FC = () => {
           {/* QR Code Pay section */}
           <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left print:hidden animate-in fade-in">
             <div className="space-y-1">
-              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Payment via UPI QR Code</span>
+              <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">Payment via UPI QR Code</span>
               <p className="text-[11px] text-slate-350">Scan using Google Pay or any UPI app to pay the fare or tip your driver.</p>
               <p className="text-[10px] text-slate-500 font-mono">UPI ID: kk6308608-1@oksbi • Payee: Krishna Kumar</p>
             </div>

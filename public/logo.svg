@@ -1,0 +1,26 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hexagonal Shield background -->
+  <polygon points="50,5 90,25 90,75 50,95 10,75 10,25" fill="#020617" stroke="#1e293b" stroke-width="4"/>
+  <!-- Glowing neon cyan outline -->
+  <polygon points="50,9 86,27 86,73 50,91 14,73 14,27" stroke="#06b6d4" stroke-width="2" stroke-opacity="0.6"/>
+  <!-- Car profile shape -->
+  <path d="M32 46 C32 46, 42 33, 50 33 C58 33, 68 46, 68 46 L78 46 C82 46, 85 49, 85 53 L81 61 C80 63, 77 65, 74 65 L26 65 C23 65, 20 63, 19 61 L15 53 C15 49, 18 46, 22 46 Z" fill="url(#body-grad)" stroke="#22d3ee" stroke-width="3"/>
+  <!-- Windshield -->
+  <path d="M38 46 C38 46, 44 37, 50 37 C56 37, 62 46, 62 46 Z" fill="rgba(34, 211, 238, 0.2)" stroke="#67e8f9" stroke-width="1.5"/>
+  <!-- Wheels -->
+  <circle cx="34" cy="65" r="7" fill="#020617" stroke="#67e8f9" stroke-width="2"/>
+  <circle cx="66" cy="65" r="7" fill="#020617" stroke="#67e8f9" stroke-width="2"/>
+  <circle cx="34" cy="65" r="2.5" fill="#22d3ee"/>
+  <circle cx="66" cy="65" r="2.5" fill="#22d3ee"/>
+  <!-- Sleek underglow line -->
+  <line x1="25" y1="76" x2="75" y2="76" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-opacity="0.8"/>
+  <!-- Integrated KK letter monogram -->
+  <path d="M45 44 L45 54 M45 49 L50 44 M45 49 L50 54" stroke="#5eead4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M51 44 L51 54 M51 49 L56 44 M51 49 L56 54" stroke="#67e8f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <defs>
+    <linearGradient id="body-grad" x1="15" y1="46" x2="85" y2="65" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#14b8a6" stop-opacity="0.6"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { UserRole } from '../../types';
+import { KkLogo } from './KkLogo';
 
 interface NavbarProps {
   onRoleSwitch: (role: UserRole) => void;
@@ -36,15 +37,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onRoleSwitch, onOpenNotification
     logout
   } = useApp();
 
-  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const unreadCount = notifications.filter(n => !n.read).length;
-
-  const handleRoleSelect = (role: UserRole) => {
-    setCurrentRole(role);
-    onRoleSwitch(role);
-    setRoleDropdownOpen(false);
-  };
 
   return (
     <header className="sticky top-0 z-40 bg-slate-950/95 border-b border-slate-800 backdrop-blur-md px-4 lg:px-8 py-3 transition-all">
@@ -52,15 +46,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onRoleSwitch, onOpenNotification
         
         {/* Brand Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-300 text-slate-950 flex items-center justify-center font-black shadow-lg shadow-amber-500/20 ring-2 ring-amber-400/40">
-            <Car className="w-5 h-5 stroke-[2.5]" />
-          </div>
+          <KkLogo size="md" showText={false} />
           <div>
             <div className="flex items-center gap-2">
               <span className="font-heading font-black text-lg tracking-tight text-white">
-                KK <span className="text-amber-400">SMART</span> CAB
+                KK <span className="text-cyan-400">SMART</span> CAB
               </span>
-              <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md border border-amber-500/30">
+              <span className="text-[10px] uppercase font-bold tracking-widest bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-md border border-cyan-500/30">
                 PRO FLEET
               </span>
             </div>
@@ -75,8 +67,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onRoleSwitch, onOpenNotification
           
           {/* Surge status indicator */}
           {pricingConfig.isSurgeActive && (
-            <div className="hidden lg:flex items-center gap-1 px-2.5 py-1 bg-amber-500/20 border border-amber-500/40 rounded-xl text-amber-300 text-xs font-bold animate-pulse">
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
+            <div className="hidden lg:flex items-center gap-1 px-2.5 py-1 bg-cyan-500/20 border border-cyan-500/40 rounded-xl text-cyan-300 text-xs font-bold animate-pulse">
+              <Zap className="w-3.5 h-3.5 text-cyan-400" />
               <span>{pricingConfig.surgeMultiplier}x Surge</span>
             </div>
           )}
@@ -115,7 +107,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onRoleSwitch, onOpenNotification
               <img
                 src={currentRole === 'driver' ? currentDriver.avatar : currentUser.avatar}
                 alt="User Profile"
-                className="w-8 h-8 rounded-xl object-cover ring-2 ring-slate-800 hover:ring-amber-500 transition duration-200"
+                className="w-8 h-8 rounded-xl object-cover ring-2 ring-slate-800 hover:ring-cyan-500 transition duration-200"
               />
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
             </button>
@@ -147,58 +139,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onRoleSwitch, onOpenNotification
                       ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
                       : currentRole === 'driver'
                       ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                      : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                      : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
                   }`}>
                     {currentRole === 'admin' ? 'Fleet Admin' : currentRole === 'driver' ? 'Captain' : 'Rider'}
                   </span>
-                </div>
-
-                {/* Sandbox Role Switcher */}
-                <div className="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80 space-y-2">
-                  <p className="text-[9px] font-bold font-mono text-slate-500 uppercase tracking-widest">
-                    Sandbox Switch Account
-                  </p>
-                  <div className="grid grid-cols-3 gap-1">
-                    <button
-                      onClick={() => {
-                        handleRoleSelect('user');
-                        setProfileDropdownOpen(false);
-                      }}
-                      className={`py-1.5 px-1 rounded-lg text-[9px] font-extrabold transition text-center cursor-pointer ${
-                        currentRole === 'user'
-                          ? 'bg-amber-500 text-slate-950 font-black'
-                          : 'bg-slate-900 text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      Rider
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleRoleSelect('driver');
-                        setProfileDropdownOpen(false);
-                      }}
-                      className={`py-1.5 px-1 rounded-lg text-[9px] font-extrabold transition text-center cursor-pointer ${
-                        currentRole === 'driver'
-                          ? 'bg-amber-500 text-slate-950 font-black'
-                          : 'bg-slate-900 text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      Captain
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleRoleSelect('admin');
-                        setProfileDropdownOpen(false);
-                      }}
-                      className={`py-1.5 px-1 rounded-lg text-[9px] font-extrabold transition text-center cursor-pointer ${
-                        currentRole === 'admin'
-                          ? 'bg-amber-500 text-slate-950 font-black'
-                          : 'bg-slate-900 text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      Admin
-                    </button>
-                  </div>
                 </div>
 
                 {/* Sign Out Action */}
@@ -207,10 +151,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onRoleSwitch, onOpenNotification
                     logout();
                     setProfileDropdownOpen(false);
                   }}
-                  className="w-full h-9 bg-slate-800 hover:bg-rose-600 text-slate-200 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border border-slate-700 hover:border-rose-500/20 cursor-pointer"
+                  className="w-full py-2.5 px-4 bg-slate-950 hover:bg-rose-600/10 text-rose-400 hover:text-rose-300 border border-slate-800 hover:border-rose-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Sign Out</span>
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout Session</span>
                 </button>
               </div>
             )}

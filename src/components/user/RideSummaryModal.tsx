@@ -78,74 +78,35 @@ export const RideSummaryModal: React.FC = () => {
           <div className="space-y-5 animate-in fade-in duration-200">
             <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-center">
               <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Total Outstanding Fare</span>
-              <div className="font-heading font-black text-3xl text-amber-400">
+              <div className="font-heading font-black text-3xl text-cyan-400">
                 ₹{totalAmount}
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">Please pay the driver to settle the trip dues.</p>
+              <p className="text-[11px] text-slate-400 mt-1">Pay to this account QR code only to settle trip dues.</p>
             </div>
 
-            {/* Selector Method */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setPayMethod('upi')}
-                className={`p-3.5 rounded-2xl border text-xs font-bold transition flex flex-col items-center justify-center gap-1.5 ${
-                  payMethod === 'upi'
-                    ? 'bg-amber-500/10 border-amber-500 text-amber-400'
-                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                }`}
-              >
-                <QrCode className="w-5 h-5" />
-                <span>Google Pay / UPI QR</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPayMethod('wallet')}
-                className={`p-3.5 rounded-2xl border text-xs font-bold transition flex flex-col items-center justify-center gap-1.5 ${
-                  payMethod === 'wallet'
-                    ? 'bg-amber-500/10 border-amber-500 text-amber-400'
-                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                }`}
-              >
-                <Wallet className="w-5 h-5" />
-                <span>KK Wallet (₹{walletBalance})</span>
-              </button>
-            </div>
-
-            {/* UPI QR Display */}
-            {payMethod === 'upi' && (
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-850 flex flex-col items-center justify-center gap-3 text-center">
-                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Scan QR to pay ₹{totalAmount}</span>
+            {/* UPI QR Display (Pay to this QR code only) */}
+            <div className="bg-slate-950 p-5 rounded-2xl border border-slate-805 flex flex-col items-center justify-center gap-4 text-center">
+              <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">Scan QR code to pay</span>
+              
+              <div className="bg-white p-2 rounded-2xl shadow-xl shadow-cyan-500/5 relative border border-slate-850">
                 <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=kk6308608-1@oksbi%26pn=Krishna%20Kumar%26cu=INR%26am=${totalAmount}`} 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=kk6308608-1@oksbi%26pn=Krishna%20Kumar%26cu=INR%26am=${totalAmount}`} 
                   alt="UPI QR Code" 
-                  className="w-40 h-40 bg-white p-2 rounded-xl shadow-md border border-slate-800"
+                  className="w-44 h-44 bg-white rounded-xl object-contain"
                 />
-                <div>
-                  <p className="text-[11px] font-bold text-slate-200">UPI ID: kk6308608-1@oksbi</p>
-                  <p className="text-[10px] text-slate-400">Payee: Krishna Kumar</p>
-                </div>
               </div>
-            )}
 
-            {/* Wallet display */}
-            {payMethod === 'wallet' && (
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-center space-y-1">
-                <p className="text-xs text-slate-200 font-bold">Pay from KK Digital Wallet</p>
-                <p className="text-[11px] text-slate-400">Your current wallet balance is ₹{walletBalance}.</p>
-                {walletBalance < totalAmount && (
-                  <p className="text-[10px] text-rose-400 font-bold mt-1">⚠️ Insufficient balance! Please pay via UPI or recharge wallet.</p>
-                )}
+              <div>
+                <p className="text-xs font-black text-slate-200">UPI ID: <span className="font-mono text-cyan-400 select-all">kk6308608-1@oksbi</span></p>
+                <p className="text-[10px] text-slate-400 font-medium mt-0.5">Account Payee: Krishna Kumar</p>
               </div>
-            )}
+            </div>
 
             <button
               onClick={handlePayRide}
-              disabled={payMethod === 'wallet' && walletBalance < totalAmount}
-              className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 bg-gradient-to-r from-cyan-500 via-cyan-400 to-teal-300 hover:from-cyan-450 hover:to-teal-200 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-xl shadow-cyan-500/25 transition active:scale-95"
             >
-              {payMethod === 'upi' ? 'Confirm Payment Complete' : `Pay ₹${totalAmount} from Wallet`}
+              Confirm Payment Complete
             </button>
           </div>
         ) : (
@@ -160,7 +121,7 @@ export const RideSummaryModal: React.FC = () => {
               </div>
               <button
                 onClick={handleOpenInvoice}
-                className="text-amber-400 hover:underline font-bold text-[11px]"
+                className="text-cyan-450 hover:underline font-bold text-[11px]"
               >
                 View Invoice
               </button>
@@ -184,8 +145,8 @@ export const RideSummaryModal: React.FC = () => {
                         <Star
                           className={`w-8 h-8 ${
                             star <= rating
-                              ? 'text-amber-400 fill-amber-400'
-                              : 'text-slate-700 hover:text-amber-300'
+                              ? 'text-cyan-450 fill-cyan-400'
+                              : 'text-slate-700 hover:text-cyan-300'
                           }`}
                         />
                       </button>
@@ -205,7 +166,7 @@ export const RideSummaryModal: React.FC = () => {
                         onClick={() => setSelectedTip(tip)}
                         className={`py-2 rounded-xl text-xs font-bold border transition ${
                           selectedTip === tip
-                            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow'
+                            ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow'
                             : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
                         }`}
                       >
@@ -221,13 +182,13 @@ export const RideSummaryModal: React.FC = () => {
                   value={reviewText}
                   onChange={e => setReviewText(e.target.value)}
                   placeholder="Leave a comment (e.g. Smooth driving)..."
-                  className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl p-3 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl p-3 focus:outline-none focus:border-cyan-500"
                 />
 
                 {/* Submit button */}
                 <button
                   onClick={handleSubmitFeedback}
-                  className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-xl transition"
+                  className="w-full py-3.5 bg-gradient-to-r from-cyan-500 via-cyan-400 to-teal-300 hover:from-cyan-450 hover:to-teal-200 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-xl shadow-cyan-500/25 transition"
                 >
                   Submit Feedback & Rating
                 </button>

@@ -12,10 +12,12 @@ import {
   AlertCircle,
   Phone,
   CheckCircle2,
-  ChevronLeft
+  ChevronLeft,
+  X
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { VehicleCategory } from '../../types';
+import { KkLogo } from './KkLogo';
 
 interface DriverLoginViewProps {
   onBack: () => void;
@@ -38,6 +40,11 @@ export const DriverLoginView: React.FC<DriverLoginViewProps> = ({ onBack }) => {
   const [vehicleCategory, setVehicleCategory] = useState<VehicleCategory>('electric');
 
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Forgot password modal
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -67,17 +74,7 @@ export const DriverLoginView: React.FC<DriverLoginViewProps> = ({ onBack }) => {
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !name || !phone || !licensePlate) {
-      setError('Please fill in all details, including license plate.');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    if (phone.replace(/\D/g, '').length < 10) {
-      setError('Please enter a valid 10-digit phone number.');
+      setError('Please fill in all required registration fields.');
       return;
     }
 
@@ -91,14 +88,17 @@ export const DriverLoginView: React.FC<DriverLoginViewProps> = ({ onBack }) => {
         licensePlate,
         category: vehicleCategory
       });
-      
-      if (!response.success) {
-        setError(response.error || 'Onboarding failed.');
+
+      if (response.success) {
+        setSuccessMsg('Captain onboarding successful! Authenticating dashboard...');
+        setTimeout(() => {
+          login(email, password, 'driver');
+        }, 1500);
       } else {
-        setSuccessMsg('Captain account created & vehicle registered! Logging in...');
+        setError(response.error || 'Onboarding registration failed.');
       }
     } catch (err) {
-      setError('An unexpected error occurred during onboarding.');
+      setError('Server onboarding failure. Check connection settings.');
     } finally {
       setIsLoading(false);
     }
@@ -134,7 +134,7 @@ export const DriverLoginView: React.FC<DriverLoginViewProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-y-auto py-12 selection:bg-amber-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-y-auto py-12 selection:bg-cyan-500 selection:text-slate-950">
       
       {/* Decorative Glowing Orbs */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none"></div>
@@ -152,18 +152,8 @@ export const DriverLoginView: React.FC<DriverLoginViewProps> = ({ onBack }) => {
         </button>
 
         {/* Brand identity header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 font-black shadow-md border border-emerald-500/20">
-            <Car className="w-6 h-6 stroke-[2]" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-heading font-black tracking-tight text-white flex items-center justify-center gap-2">
-              KK <span className="text-amber-400">SMART</span> CAB
-            </h1>
-            <p className="text-[10px] uppercase font-bold tracking-widest text-emerald-500/60 font-mono">
-              CAPTAIN PARTNER COCKPIT
-            </p>
-          </div>
+        <div className="flex flex-col items-center justify-center gap-3 text-center">
+          <KkLogo size="md" showText={true} className="flex-col text-center" />
         </div>
 
         {/* Form Card */}
@@ -265,9 +255,17 @@ export const DriverLoginView: React.FC<DriverLoginViewProps> = ({ onBack }) => {
                     Security Password
                   </label>
                   {!isRegistering && (
-                    <a href="#forgot" className="text-[10px] text-emerald-400/80 hover:text-emerald-300 font-medium transition">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForgotEmail(email || 'driver@kkcab.com');
+                        setForgotSent(false);
+                        setShowForgotModal(true);
+                      }}
+                      className="text-[10px] text-emerald-400/80 hover:text-emerald-300 font-medium transition cursor-pointer"
+                    >
                       Forgot Password?
-                    </a>
+                    </button>
                   )}
                 </div>
                 <div className="relative">
@@ -442,6 +440,68 @@ export const DriverLoginView: React.FC<DriverLoginViewProps> = ({ onBack }) => {
         )}
 
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-55 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-slate-100 animate-in zoom-in-95 space-y-4">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+              <h3 className="font-heading font-black text-sm text-white">Reset Captain Password</h3>
+              <button
+                onClick={() => setShowForgotModal(false)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-850 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {forgotSent ? (
+              <div className="space-y-4 text-center py-4">
+                <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto animate-bounce" />
+                <p className="text-xs text-slate-300">
+                  Password reset link and instructions have been successfully sent to <strong className="text-emerald-450">{forgotEmail}</strong>.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(false)}
+                  className="w-full py-2 bg-slate-800 hover:bg-slate-700 font-bold text-xs rounded-xl transition cursor-pointer"
+                >
+                  Close Window
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-xs text-slate-400">
+                  Enter your registered captain email address below. We'll send you a secure link to reset your driver partner credentials.
+                </p>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono pl-1">
+                    Registered Email
+                  </label>
+                  <input
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="driver@kkcab.com"
+                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 px-3 py-2.5 rounded-xl text-xs focus:outline-none focus:border-emerald-500 transition placeholder-slate-650"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (forgotEmail.trim()) {
+                      setForgotSent(true);
+                    }
+                  }}
+                  className="w-full py-2.5 bg-gradient-to-r from-emerald-500 via-emerald-450 to-teal-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition cursor-pointer"
+                >
+                  Send Reset Link
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
     </div>
   );

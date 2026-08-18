@@ -74,7 +74,11 @@ function MainApp() {
     simulatedCarPosition,
     geofenceZones,
     pricingConfig,
-    isAuthenticated
+    isAuthenticated,
+    pickup,
+    destination,
+    stops,
+    bookingRouteCoordinates
   } = useApp();
 
   // User Tabs: 'book' | 'active' | 'rides' | 'wallet' | 'corporate' | 'lostfound' | 'support' | 'profile'
@@ -248,6 +252,10 @@ function MainApp() {
                   </div>
                   <div className="lg:col-span-5 sticky top-20 h-[520px] lg:h-[620px]">
                     <LeafletMap 
+                      pickup={pickup}
+                      destination={destination}
+                      stops={stops}
+                      routeCoordinates={bookingRouteCoordinates}
                       drivers={drivers}
                       geofences={geofenceZones}
                       rideStatus="idle"

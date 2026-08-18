@@ -10,9 +10,12 @@ import {
   ArrowRight,
   Sparkles,
   AlertCircle,
-  ChevronLeft
+  ChevronLeft,
+  CheckCircle2,
+  X
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { KkLogo } from './KkLogo';
 
 interface AdminLoginViewProps {
   onBack: () => void;
@@ -24,6 +27,11 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onBack }) => {
   // Fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  // Forgot password modal
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -88,18 +96,8 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onBack }) => {
         </button>
 
         {/* Brand identity header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-rose-500/10 text-rose-450 font-black shadow-md border border-rose-500/20">
-            <Layers className="w-6 h-6 stroke-[2]" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-heading font-black tracking-tight text-white flex items-center justify-center gap-2">
-              KK <span className="text-amber-400">SMART</span> CAB
-            </h1>
-            <p className="text-[10px] uppercase font-bold tracking-widest text-rose-550/60 font-mono">
-              OPERATIONS CONTROL CENTER
-            </p>
-          </div>
+        <div className="flex flex-col items-center justify-center gap-3 text-center">
+          <KkLogo size="md" showText={true} className="flex-col text-center" />
         </div>
 
         {/* Form Card */}
@@ -152,9 +150,17 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onBack }) => {
                   <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">
                     System Access Key
                   </label>
-                  <a href="#forgot" className="text-[10px] text-rose-450 hover:text-rose-350 font-medium transition">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotEmail(email || 'krishna');
+                      setForgotSent(false);
+                      setShowForgotModal(true);
+                    }}
+                    className="text-[10px] text-rose-400 hover:text-rose-350 font-medium transition cursor-pointer"
+                  >
                     Forgot Access Key?
-                  </a>
+                  </button>
                 </div>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
@@ -237,6 +243,68 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onBack }) => {
         </div>
 
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-55 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-slate-100 animate-in zoom-in-95 space-y-4">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+              <h3 className="font-heading font-black text-sm text-white">Reset System Access Key</h3>
+              <button
+                onClick={() => setShowForgotModal(false)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-850 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {forgotSent ? (
+              <div className="space-y-4 text-center py-4">
+                <CheckCircle2 className="w-10 h-10 text-rose-400 mx-auto animate-bounce" />
+                <p className="text-xs text-slate-300">
+                  Access key instructions have been successfully sent to system administrator account <strong className="text-rose-450">{forgotEmail}</strong>.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(false)}
+                  className="w-full py-2 bg-slate-800 hover:bg-slate-700 font-bold text-xs rounded-xl transition cursor-pointer"
+                >
+                  Close Window
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-xs text-slate-400">
+                  Enter your system administrator username or email. We'll dispatch a recovery verification key to your master account.
+                </p>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono pl-1">
+                    System Username / Email
+                  </label>
+                  <input
+                    type="text"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="krishna"
+                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 px-3 py-2.5 rounded-xl text-xs focus:outline-none focus:border-rose-500 transition placeholder-slate-650"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (forgotEmail.trim()) {
+                      setForgotSent(true);
+                    }
+                  }}
+                  className="w-full py-2.5 bg-gradient-to-r from-rose-550 to-orange-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition cursor-pointer"
+                >
+                  Request Verification Key
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
     </div>
   );

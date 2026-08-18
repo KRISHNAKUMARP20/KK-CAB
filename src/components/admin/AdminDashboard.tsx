@@ -28,7 +28,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateTab })
     geofenceZones, 
     maintenanceRecords, 
     fuelLogs, 
-    lostItemCases 
+    lostItemCases,
+    activityLogs
   } = useApp();
 
   const totalRevenue = bookings.reduce((sum, b) => sum + b.fareBreakdown.totalFare, 0);
@@ -180,6 +181,65 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateTab })
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* 4. Rider & Captain Live Operations Activity Monitor */}
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 lg:p-6 shadow-2xl space-y-4">
+        <div>
+          <h3 className="font-heading font-black text-lg text-white">Rider & Captain Live Operations Monitor</h3>
+          <p className="text-xs text-slate-400">Real-time status feed tracking user log-ins, cab requests, driver acceptance, and payments.</p>
+        </div>
+
+        {activityLogs.length === 0 ? (
+          <div className="text-center py-8 text-slate-500 border border-dashed border-slate-800 rounded-2xl">
+            No live activities logged yet. Actions will populate here as drivers and riders interact with the portal.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-950 text-[10px] text-slate-400 uppercase font-bold border-b border-slate-800">
+                  <th className="p-3">Time</th>
+                  <th className="p-3">User/Driver</th>
+                  <th className="p-3">Portal Role</th>
+                  <th className="p-3">Logged Action</th>
+                  <th className="p-3 text-right">System Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                {activityLogs.slice(0, 10).map(log => (
+                  <tr key={log.id} className="hover:bg-slate-950/40">
+                    <td className="p-3 font-mono text-slate-400">{log.timestamp}</td>
+                    <td className="p-3 font-semibold text-white">{log.userName}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        log.role === 'admin' 
+                          ? 'bg-rose-500/20 text-rose-300' 
+                          : log.role === 'driver' 
+                          ? 'bg-emerald-500/20 text-emerald-300' 
+                          : 'bg-cyan-500/20 text-cyan-300'
+                      }`}>
+                        {log.role}
+                      </span>
+                    </td>
+                    <td className="p-3 text-slate-200">{log.action}</td>
+                    <td className="p-3 text-right">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        log.status === 'Success'
+                          ? 'bg-emerald-500/25 text-emerald-400 border border-emerald-500/30'
+                          : log.status === 'Pending'
+                          ? 'bg-amber-500/25 text-amber-400 border border-amber-500/30'
+                          : 'bg-rose-500/25 text-rose-400 border border-rose-500/30'
+                      }`}>
+                        {log.status === 'Success' ? '✓ Working Perfectly' : log.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
     </div>

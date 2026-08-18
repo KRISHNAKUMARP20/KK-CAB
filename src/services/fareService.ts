@@ -46,7 +46,7 @@ export function calculateRouteDistance(
   }
   totalKm += calculateDistanceKm(current.lat, current.lng, destination.lat, destination.lng);
 
-  if (totalKm < 2.5) totalKm = 3.2; // Minimum floor
+  if (totalKm < 0.1) totalKm = 0.1; // Prevent zero/negative distance
 
   // Avg speed 28 km/h in city traffic + 5 min pickup buffer
   const durationMinutes = Math.round((totalKm / 26) * 60) + (stops.length * 8) + 4;
@@ -65,60 +65,26 @@ export function computeDetailedFare(
   promoDiscount = 0
 ): FareBreakdown {
   const catConfig = pricingConfig.categories[category];
-  const surge = pricingConfig.isSurgeActive ? pricingConfig.surgeMultiplier : 1.0;
-
-  let base = catConfig.baseFare;
-  let distFare = distanceKm * catConfig.perKmRate;
-  let timeFare = durationMinutes * catConfig.perMinRate;
-  let tollEstimate = 0;
-  let nightCharges = 0;
-
-  if (bookingType === 'rentals' && rentalPackage) {
-    if (rentalPackage === '2hr_20km') {
-      base = catConfig.hourlyRentalBase * 1.0;
-      distFare = Math.max(0, distanceKm - 20) * (catConfig.perKmRate * 1.2);
-    } else if (rentalPackage === '4hr_40km') {
-      base = catConfig.hourlyRentalBase * 1.8;
-      distFare = Math.max(0, distanceKm - 40) * (catConfig.perKmRate * 1.2);
-    } else if (rentalPackage === '8hr_80km') {
-      base = catConfig.hourlyRentalBase * 3.4;
-      distFare = Math.max(0, distanceKm - 80) * (catConfig.perKmRate * 1.2);
-    } else if (rentalPackage === '12hr_120km') {
-      base = catConfig.hourlyRentalBase * 4.8;
-      distFare = Math.max(0, distanceKm - 120) * (catConfig.perKmRate * 1.2);
-    }
-    timeFare = 0;
-  } else if (bookingType === 'outstation') {
-    const isRound = outstationType === 'round_trip';
-    const effectiveKm = isRound ? distanceKm * 2 : distanceKm;
-    base = 500; // Driver allowance / day
-    distFare = effectiveKm * catConfig.outstationPerKmRate;
-    timeFare = 0;
-    tollEstimate = isRound ? 450 : 250;
-  }
-
-  const subtotalBeforeSurge = Math.max(catConfig.minFare, base + distFare + timeFare);
-  const surgeAmount = Math.round(subtotalBeforeSurge * (surge - 1.0));
-  const subtotalWithSurge = subtotalBeforeSurge + surgeAmount + tollEstimate + nightCharges;
   
-  const discountAmount = Math.min(promoDiscount, subtotalWithSurge * 0.4);
-  const taxableAmount = Math.max(0, subtotalWithSurge - discountAmount);
-  const gstAmount = Math.round(taxableAmount * pricingConfig.gstTaxRate);
-  
-  const totalFare = Math.round(taxableAmount + gstAmount);
+  // Strict calculation: perKmRate * distanceKm
+  const rate = (bookingType === 'outstation' && outstationType === 'round_trip')
+    ? catConfig.perKmRate * 2
+    : catConfig.perKmRate;
+
+  const totalFare = Math.round(distanceKm * rate);
   const platformCommission = Math.round(totalFare * (pricingConfig.platformFeePercent / 100));
   const driverTakeHome = Math.max(0, totalFare - platformCommission);
 
   return {
-    baseFare: Math.round(base),
-    distanceFare: Math.round(distFare),
-    timeFare: Math.round(timeFare),
-    surgeMultiplier: surge,
-    surgeAmount,
-    gstAmount,
-    discount: Math.round(discountAmount),
-    tollEstimate,
-    nightCharges,
+    baseFare: 0,
+    distanceFare: totalFare,
+    timeFare: 0,
+    surgeMultiplier: 1.0,
+    surgeAmount: 0,
+    gstAmount: 0,
+    discount: 0,
+    tollEstimate: 0,
+    nightCharges: 0,
     totalFare,
     driverTakeHome,
     platformCommission,
@@ -152,4 +118,49 @@ export function generateInterpolatedPath(
   }
 
   return fullPath;
+}
+
+export async function fetchRealRoadRoute(
+  pickup: LocationPoint,
+  destination: LocationPoint,
+  stops: LocationPoint[] = []
+): Promise<{ distanceKm: number; durationMinutes: number; routeCoordinates: [number, number][] }> {
+  try {
+    const waypoints = [
+      `${pickup.lng},${pickup.lat}`,
+      ...stops.map(s => `${s.lng},${s.lat}`),
+      `${destination.lng},${destination.lat}`
+    ].join(';');
+
+    const url = `https://router.projectosrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('OSRM API request failed');
+    
+    const data = await response.json();
+    if (data.code !== 'Ok' || !data.routes || !data.routes.length) {
+      throw new Error('OSRM route code is not Ok');
+    }
+
+    const route = data.routes[0];
+    const distanceKm = Math.round((route.distance / 1000) * 10) / 10;
+    const durationMinutes = Math.max(2, Math.round(route.duration / 60));
+    
+    // Convert [lng, lat] to [lat, lng] for Leaflet
+    const routeCoordinates: [number, number][] = route.geometry.coordinates.map(
+      (c: [number, number]) => [c[1], c[0]] as [number, number]
+    );
+
+    return { distanceKm, durationMinutes, routeCoordinates };
+  } catch (error) {
+    console.warn('OSRM Route fetch failed, using haversine fallback:', error);
+    const { distanceKm, durationMinutes } = calculateRouteDistance(pickup, destination, stops);
+    const intermediateCoords: [number, number][] = stops.map(s => [s.lat, s.lng]);
+    const routeCoordinates = generateInterpolatedPath(
+      [pickup.lat, pickup.lng],
+      [destination.lat, destination.lng],
+      intermediateCoords,
+      50
+    );
+    return { distanceKm, durationMinutes, routeCoordinates };
+  }
 }
