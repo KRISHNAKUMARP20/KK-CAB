@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+@theme {
+  /* Override Slate to Space Indigo Obsidian */
+  --color-slate-50: #f4f5fa;
+  --color-slate-100: #e9ebf4;
+  --color-slate-200: #d4d7e9;
+  --color-slate-300: #b1b7d8;
+  --color-slate-400: #8892c2;
+  --color-slate-500: #6771aa;
+  --color-slate-600: #505991;
+  --color-slate-700: #404776;
+  --color-slate-800: #1b1e36;
+  --color-slate-850: #121427;
+  --color-slate-900: #0a0b16;
+  --color-slate-950: #04050a;
+
+  /* Redirect Amber to Electric Cyan */
+  --color-amber-50: #ecfeff;
+  --color-amber-100: #cffafe;
+  --color-amber-200: #a5f3fc;
+  --color-amber-300: #67e8f9;
+  --color-amber-400: #22d3ee;
+  --color-amber-500: #06b6d4;
+  --color-amber-600: #0891b2;
+  --color-amber-700: #0e7490;
+  --color-amber-800: #155e75;
+  --color-amber-900: #164e63;
+  --color-amber-950: #083344;
+
+  /* Redirect Yellow to Electric Cyan/Teal (for smooth gradients) */
+  --color-yellow-50: #ecfeff;
+  --color-yellow-100: #cffafe;
+  --color-yellow-200: #a5f3fc;
+  --color-yellow-300: #67e8f9;
+  --color-yellow-400: #22d3ee;
+  --color-yellow-500: #06b6d4;
+  --color-yellow-600: #0891b2;
+  --color-yellow-700: #0e7490;
+  --color-yellow-800: #155e75;
+  --color-yellow-900: #164e63;
+  --color-yellow-950: #083344;
+}
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--color-slate-950);
+    color: #f8fafc;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: 'Outfit', sans-serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-slate-950);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-slate-800);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-slate-700);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Leaflet Map Customizations */
+.leaflet-container {
+  background-color: var(--color-slate-950) !important;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.leaflet-popup-content-wrapper {
+  background-color: var(--color-slate-900) !important;
+  color: #f8fafc !important;
+  border: 1px solid var(--color-slate-800) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+  padding: 4px;
+}
+
+.leaflet-popup-tip {
+  background-color: var(--color-slate-900) !important;
+}
+
+/* Radar pulse animation */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}

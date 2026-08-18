@@ -1,0 +1,6 @@
+{
+  "name": "KK Smart Cab Management System",
+  "description": "Comprehensive ride-hailing and fleet management platform featuring multi-category cab booking, live GPS telemetry, captain driver dispatch, fleet operations, geofence surge control, corporate billing, and smart AI assistant.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
