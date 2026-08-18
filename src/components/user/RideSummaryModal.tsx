@@ -1,15 +1,3 @@
-import React, { useState } from 'react';
-import { 
-  Star, 
-  CheckCircle2, 
-  FileText, 
-  Heart, 
-  Smile, 
-  Sparkles, 
-  Share2, 
-  X 
-} from 'lucide-react';
-import { useApp } from '../../context/AppContext';
 
 import React, { useState } from 'react';
 import { 
