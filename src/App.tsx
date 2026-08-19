@@ -35,6 +35,7 @@ import { InvoiceModal } from './components/common/InvoiceModal';
 import { NotificationDrawer } from './components/common/NotificationDrawer';
 import { SmartAiAssistant } from './components/common/SmartAiAssistant';
 import { PortalSelectorView } from './components/common/PortalSelectorView';
+import { PwaInstallPrompt } from './components/common/PwaInstallPrompt';
 
 // Passenger Components
 import { BookCabView } from './components/user/BookCabView';
@@ -572,6 +573,7 @@ function MainApp() {
         onClose={() => setIsNotificationOpen(false)} 
       />
       <SmartAiAssistant />
+      <PwaInstallPrompt />
 
       {/* Sleek Footer */}
       <footer className="border-t border-slate-900/80 bg-slate-950/90 py-6 px-4 text-center text-xs text-slate-400">
