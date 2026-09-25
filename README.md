@@ -1,20 +1,123 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# 🚕 KK SMART CAB
 
-# Run and deploy your AI Studio app
+**KK Smart Cab** is a smart cab management and booking system designed to connect **users, drivers, vehicles, bookings, and payments** in one platform.
 
-This contains everything you need to run your app locally.
+## 📌 Features
 
-View your app in AI Studio: https://ai.studio/apps/c7322d81-1548-4cfc-a6ef-7188cb66e795
+* 👤 User Registration & Login
+* 🚕 Cab Booking
+* 📍 Pickup & Drop Location
+* 🚗 Vehicle Selection
+* 💰 Fare Calculation
+* 👨‍✈️ Driver Management
+* 📅 Booking Management
+* 💳 Payment Management
+* 🧾 Invoice Generation
+* 🆘 Emergency Cab Booking
+* 👨‍💼 Admin Dashboard
+* 📊 Reports & Analytics
 
-## Run Locally
+## 🧩 Modules
 
-**Prerequisites:**  Node.js
+### 👤 User Module
 
+* Register/Login
+* Book a cab
+* Select vehicle
+* View booking history
+* Make payment
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### 👨‍✈️ Driver Module
+
+* Driver registration
+* Vehicle details
+* Availability status
+* Accept rides
+* Manage rides
+
+### 🚕 Cab Module
+
+* Mini
+* Sedan
+* SUV
+* Luxury
+
+### 📅 Booking Module
+
+* Create booking
+* Assign driver
+* Track booking status
+* Cancel booking
+
+### 💳 Payment Module
+
+* Online payment
+* QR payment
+* Payment status
+* Invoice generation
+
+### 👨‍💼 Admin Module
+
+* Manage users
+* Manage drivers
+* Manage vehicles
+* Manage bookings
+* Manage payments
+* Generate reports
+
+## 🛠️ Technologies
+
+* **Frontend:** HTML, CSS, JavaScript
+* **Backend:** Java
+* **Database:** MySQL
+* **API:** REST API
+* **Tools:** VS Code, IntelliJ IDEA, MySQL Workbench, Git & GitHub
+
+## 📂 Project Structure
+
+```text
+KK-SMART-CAB/
+│
+├── frontend/
+├── backend/
+├── database/
+├── invoices/
+├── assets/
+├── docs/
+├── .gitignore
+└── README.md
+```
+
+## 🔄 Working Flow
+
+```text
+User Login
+    ↓
+Select Pickup & Drop
+    ↓
+Select Vehicle
+    ↓
+Calculate Fare
+    ↓
+Book Cab
+    ↓
+Driver Assignment
+    ↓
+Ride
+    ↓
+Payment
+    ↓
+Invoice
+```
+
+## 🎯 Objective
+
+The main objective of **KK Smart Cab** is to provide a simple, secure, and efficient platform for managing cab bookings, drivers, vehicles, payments, and rides.
+
+## 👨‍💻 Developer
+
+**KRISHNAKUMAR**
+
+B.Tech Information Technology
+
+> 🚕 **KK SMART CAB — Smart • Fast • Secure**
